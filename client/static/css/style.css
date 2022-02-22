@@ -1,0 +1,110 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@100;200;300;400;500;600;700;800;900&display=swap');
+
+* {
+  padding: 0;
+  margin: 0;
+  box-sizing: border-box;
+  border: 0;
+  font-family: Inter, sans-serif;
+  text-decoration: none;
+  list-style-type: none;
+  outline: none;
+  color: #f0f0f0;
+  line-height: 1.5em;
+}
+
+body {
+  background: #292b30;
+}
+
+.container {
+  height: 100vh;
+  width: 100vw;
+  padding: 20px;
+  display: flex;
+  align-items: center;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.button,
+.save_button {
+  user-select: none;
+  cursor: pointer;
+  padding: 10px 20px;
+  font-weight: 500;
+  border-radius: 5px;
+  background: #ae7fe4;
+  box-shadow: 0px 3px 0px 0px #7049a3;
+  transition: 0.2s;
+  text-transform: uppercase;
+}
+
+.button.logged {
+  background: #2b96de;
+  box-shadow: 0px 3px 0px 0px #2772a5;
+}
+
+.button:active,
+.save_button:active {
+  box-shadow: 0px 0px 0px 0px rgba(112, 73, 163, 0);
+  transform: translateY(3px);
+}
+
+.info {
+  margin: 20px 0;
+  text-align: center;
+}
+
+.info.err {
+  color: #ec384d;
+}
+
+.info.logged {
+  color: #c2c8cf;
+}
+
+.info.success {
+  color: #70ff70;
+}
+
+input {
+  display: none;
+  background: #222427;
+  padding: 10px 15px;
+  border: 2px solid #1f2124;
+  border-radius: 10px;
+  transition: 0.2s;
+  max-width: 750px;
+  min-width: 350px;
+  width: 100%;
+  animation: fade 0.5s forwards;
+}
+
+input:not(:first-of-type) {
+  margin-top: 10px;
+}
+
+input::placeholder {
+  color: #ffffff85;
+  text-transform: uppercase;
+}
+
+input:active,
+input:focus {
+  border: 2px solid #9677df;
+}
+
+.save_button {
+  display: none;
+  margin-top: 20px;
+}
+
+@keyframes fade {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
