@@ -23,7 +23,8 @@ First, you need to register/login the [Discord app](https://discord.com/develope
 
 #### SERVER
 
-Enter in /server directory
+You must have Node.js installed to work of >17.0.0 version
+Enter in /server directory in console
 
 ```
   npm i
