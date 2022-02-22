@@ -32,6 +32,7 @@ Enter in /server directory in console
 
 - Watch the small part (0:30-4:40) of the great [guide](https://www.youtube.com/watch?v=PFJNJQCU_lo&ab_channel=JamesGrimshaw 'Youtube guide') so that you make credentials to work with your Google Spreadsheet
 - Create/populate the credentials.json and paste all data from the downloaded file Google Spreadsheets
+- Activate developer mode in Discord settings so you can copy IDs
 - Create/populate the .env file in the ./server folder  
   Structure:
 
