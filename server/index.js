@@ -41,8 +41,6 @@ const initGoogleSheets = async () => {
   return [google.sheets({ version: 'v4', auth: client }), auth];
 };
 
-const [googleSheets, auth] = await initGoogleSheets();
-
 // ! GOOGLESHEETS INIT
 
 app.get('/api/update', async (req, res) => {
@@ -120,6 +118,8 @@ app.get('/api/save', async (req, res) => {
     }
 
     const spreadsheetId = process.env.SPREADSHEET_ID;
+
+    const [googleSheets, auth] = await initGoogleSheets();
 
     const getRows = await googleSheets.spreadsheets.values.get({
       auth,
