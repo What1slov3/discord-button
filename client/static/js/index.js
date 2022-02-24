@@ -3,8 +3,7 @@
 // !CONFIG IS HERE START
 let config = {
   redirectUrl: '',
-  oauthUrl:
-    '',
+  oauthUrl: '',
   serverUrl: '',
 };
 // !CONFIG IS HERE END
