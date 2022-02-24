@@ -3,9 +3,26 @@ import cors from 'cors';
 import dotenv from 'dotenv';
 import fetch from 'node-fetch';
 import { google } from 'googleapis';
+import path from 'path';
+import fs from 'fs';
+import https from 'https';
+
+// ! SSL START
+let httpsOptions;
+try {
+  httpsOptions = {
+    key: fs.readFileSync('server.key'),
+    cert: fs.readFileSync('server.crt'),
+  };
+} catch (err) {
+  console.log('[ERROR]', err.message);
+}
+// ! SSL END
 
 dotenv.config();
 const app = express();
+
+app.use(express.static(path.join(path.resolve(path.dirname('')), '../client/')));
 
 app.use(
   cors({
@@ -209,6 +226,16 @@ app.get('/api', async ({ query }, res) => {
   }
 });
 
-app.listen(process.env.PORT, () => {
-  console.log(`[SERVER] Started ${process.env.PORT}`);
+app.get('/*', async (req, res) => {
+  res.status(200).sendFile(path.join(path.resolve(path.dirname('')), '../client/index.html'));
 });
+
+if (httpsOptions && httpsOptions.cert && httpsOptions.key) {
+  https.createServer(httpsOptions, app).listen(process.env.PORT, () => {
+    console.log(`[SERVER] Started ${process.env.PORT}`);
+  });
+} else {
+  app.listen(process.env.PORT, () => {
+    console.log(`[SERVER] Started ${process.env.PORT}`);
+  });
+}
