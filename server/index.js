@@ -7,17 +7,17 @@ import path from 'path';
 import fs from 'fs';
 import https from 'https';
 
-// ! SSL START
-let httpsOptions;
-try {
-  httpsOptions = {
-    key: fs.readFileSync('server.key'),
-    cert: fs.readFileSync('server.crt'),
-  };
-} catch (err) {
-  console.log('[ERROR]', err.message);
-}
-// ! SSL END
+// // ! SSL START
+// let httpsOptions;
+// try {
+//   httpsOptions = {
+//     key: fs.readFileSync('server.key'),
+//     cert: fs.readFileSync('server.crt'),
+//   };
+// } catch (err) {
+//   console.log('[ERROR]', err.message);
+// }
+// // ! SSL END
 
 dotenv.config();
 const app = express();
@@ -58,6 +58,16 @@ const initGoogleSheets = async () => {
   return [google.sheets({ version: 'v4', auth: client }), auth];
 };
 
+const spreadsheetId = process.env.SPREADSHEET_ID;
+let googleSheets, auth;
+
+initGoogleSheets()
+  .then((res) => {
+    googleSheets = res[0];
+    auth = res[1];
+  })
+  .catch((err) => console.log(err));
+
 // ! GOOGLESHEETS INIT
 
 app.get('/api/update', async (req, res) => {
@@ -93,8 +103,24 @@ app.get('/api/update', async (req, res) => {
       return res.status(401).send();
     }
 
-    return res.status(200).send({ user, hasRole });
+    const getRows = await googleSheets.spreadsheets.values.get({
+      auth,
+      spreadsheetId,
+      range: process.env.SPREADSHEET_NAME,
+    });
+
+    if (!getRows.data.values) {
+      console.error('GoogleSheets has problems');
+      res.status(500).send({ error: true, error_description: 'GoogleSheets has problems, try later' });
+    }
+
+    const userValues = getRows.data.values.find((row) => row[0] === `${user.username}#${user.discriminator}`);
+    if (userValues && userValues[1]) {
+      return res.status(200).send({ user, hasRole, already: userValues[1] });
+    }
+    return res.status(200).send({ user, hasRole, already: false });
   } catch (err) {
+    console.error(err);
     return res.status(500).send();
   }
 });
@@ -109,7 +135,7 @@ app.get('/api/save', async (req, res) => {
       return json.json();
     };
 
-    const { accessToken, firstText, secondText } = req.query;
+    const { accessToken, text } = req.query;
     let user, hasRole;
 
     if (accessToken && accessToken.split(' ')[0] === 'Bearer') {
@@ -130,19 +156,20 @@ app.get('/api/save', async (req, res) => {
       return res.status(401).send();
     }
 
-    if (!hasRole || (hasRole === 'oneField' && !firstText) || (hasRole === 'twoFields' && !firstText && !secondText)) {
+    if (!hasRole || !text) {
       return res.status(400).send("Don't have permissions or missed fields");
     }
-
-    const spreadsheetId = process.env.SPREADSHEET_ID;
-
-    const [googleSheets, auth] = await initGoogleSheets();
 
     const getRows = await googleSheets.spreadsheets.values.get({
       auth,
       spreadsheetId,
       range: process.env.SPREADSHEET_NAME,
     });
+
+    if (!getRows.data.values) {
+      console.error('GoogleSheets has problems');
+      res.status(500).send({ error: true, error_description: 'GoogleSheets has problems, try later' });
+    }
 
     if (getRows.data.values.find((row) => row[0] === `${user.username}#${user.discriminator}`)) {
       return res.status(400).send('User already registered');
@@ -154,7 +181,7 @@ app.get('/api/save', async (req, res) => {
       range: `${process.env.SPREADSHEET_NAME}!A:C`,
       valueInputOption: 'USER_ENTERED',
       resource: {
-        values: [[`${user.username}#${user.discriminator}`, firstText, secondText]],
+        values: [[`${user.username}#${user.discriminator}`, text, hasRole === 'oneField' ? 'No' : 'Yes']],
       },
     });
 
@@ -219,23 +246,49 @@ app.get('/api', async ({ query }, res) => {
       return res.status(500).send();
     }
 
-    return res.status(200).send({ user, hasRole, accessToken: `${oauthData.token_type} ${oauthData.access_token}` });
+    const getRows = await googleSheets.spreadsheets.values.get({
+      auth,
+      spreadsheetId,
+      range: process.env.SPREADSHEET_NAME,
+    });
+
+    if (!getRows.data.values) {
+      console.error('GoogleSheets has problems');
+      res.status(500).send({ error: true, error_description: 'GoogleSheets has problems, try later' });
+    }
+
+    const userValues = getRows.data.values.find((row) => row[0] === `${user.username}#${user.discriminator}`);
+    if (userValues && userValues[1]) {
+      return res.status(200).send({
+        user,
+        hasRole,
+        accessToken: `${oauthData.token_type} ${oauthData.access_token}`,
+        already: userValues[1],
+      });
+    }
+    return res
+      .status(200)
+      .send({ user, hasRole, accessToken: `${oauthData.token_type} ${oauthData.access_token}`, already: false });
   } catch (err) {
     console.error(err);
     return res.status(500).send();
   }
 });
 
-app.get('/*', async (req, res) => {
-  res.status(200).sendFile(path.join(path.resolve(path.dirname('')), '../client/index.html'));
-});
+// app.get('/*', async (req, res) => {
+//   res.status(200).sendFile(path.join(path.resolve(path.dirname('')), '../client/index.html'));
+// });
 
-if (httpsOptions && httpsOptions.cert && httpsOptions.key) {
-  https.createServer(httpsOptions, app).listen(process.env.PORT, () => {
-    console.log(`[SERVER] Started ${process.env.PORT}`);
-  });
-} else {
-  app.listen(process.env.PORT, () => {
-    console.log(`[SERVER] Started ${process.env.PORT}`);
-  });
-}
+// if (httpsOptions && httpsOptions.cert && httpsOptions.key) {
+//   https.createServer(httpsOptions, app).listen(process.env.PORT, () => {
+//     console.log(`[SERVER] Started ${process.env.PORT}`);
+//   });
+// } else {
+//   app.listen(process.env.PORT, () => {
+//     console.log(`[SERVER] Started ${process.env.PORT}`);
+//   });
+// }
+
+app.listen(process.env.PORT, () => {
+  console.log(`[SERVER] Started ${process.env.PORT}`);
+});

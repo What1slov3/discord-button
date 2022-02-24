@@ -100,6 +100,20 @@ input:focus {
   margin-top: 20px;
 }
 
+.already {
+  display: none;
+}
+
+.role {
+  margin-bottom: 10px;
+}
+
+.already,
+.role {
+  color: #c2c8cf;
+  text-align: center;
+}
+
 @keyframes fade {
   from {
     opacity: 0;
