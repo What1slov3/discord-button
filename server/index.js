@@ -114,7 +114,7 @@ app.get('/api/update', async (req, res) => {
       res.status(500).send({ error: true, error_description: 'GoogleSheets has problems, try later' });
     }
 
-    const userValues = getRows.data.values.find((row) => row[0] === `${user.username}#${user.discriminator}`);
+    const userValues = getRows.data.values.find((row) => row[3] === user.id);
     if (userValues && userValues[1]) {
       return res.status(200).send({ user, hasRole, already: userValues[1] });
     }
@@ -171,17 +171,17 @@ app.get('/api/save', async (req, res) => {
       res.status(500).send({ error: true, error_description: 'GoogleSheets has problems, try later' });
     }
 
-    if (getRows.data.values.find((row) => row[0] === `${user.username}#${user.discriminator}`)) {
+    if (getRows.data.values.find((row) => row[3] === user.id)) {
       return res.status(400).send('User already registered');
     }
 
     await googleSheets.spreadsheets.values.append({
       auth,
       spreadsheetId,
-      range: `${process.env.SPREADSHEET_NAME}!A:C`,
+      range: `${process.env.SPREADSHEET_NAME}!A:D`,
       valueInputOption: 'USER_ENTERED',
       resource: {
-        values: [[`${user.username}#${user.discriminator}`, text, hasRole === 'oneField' ? 'No' : 'Yes']],
+        values: [[`${user.username}#${user.discriminator}`, text, hasRole === 'oneField' ? 'No' : 'Yes', user.id]],
       },
     });
 
@@ -236,8 +236,10 @@ app.get('/api', async ({ query }, res) => {
       })
         .then(handleJsonCheck)
         .then((response) => {
-          user = response.user;
-          hasRole = compareUsersRoles(response.roles);
+          if (response) {
+            user = response.user;
+            hasRole = compareUsersRoles(response.roles);
+          }
         })
         .catch((err) => console.error(err));
 
@@ -257,7 +259,7 @@ app.get('/api', async ({ query }, res) => {
       res.status(500).send({ error: true, error_description: 'GoogleSheets has problems, try later' });
     }
 
-    const userValues = getRows.data.values.find((row) => row[0] === `${user.username}#${user.discriminator}`);
+    const userValues = getRows.data.values.find((row) => row[3] === user.id);
     if (userValues && userValues[1]) {
       return res.status(200).send({
         user,
@@ -274,20 +276,6 @@ app.get('/api', async ({ query }, res) => {
     return res.status(500).send();
   }
 });
-
-// app.get('/*', async (req, res) => {
-//   res.status(200).sendFile(path.join(path.resolve(path.dirname('')), '../client/index.html'));
-// });
-
-// if (httpsOptions && httpsOptions.cert && httpsOptions.key) {
-//   https.createServer(httpsOptions, app).listen(process.env.PORT, () => {
-//     console.log(`[SERVER] Started ${process.env.PORT}`);
-//   });
-// } else {
-//   app.listen(process.env.PORT, () => {
-//     console.log(`[SERVER] Started ${process.env.PORT}`);
-//   });
-// }
 
 app.listen(process.env.PORT, () => {
   console.log(`[SERVER] Started ${process.env.PORT}`);
