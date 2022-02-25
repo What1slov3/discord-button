@@ -1,12 +1,6 @@
 'use strict';
 
-// !CONFIG IS HERE START
-let config = {
-  redirectUrl: '',
-  oauthUrl: '',
-  serverUrl: '',
-};
-// !CONFIG IS HERE END
+import config from './config.js';
 
 const infoBlock = document.querySelector('.info');
 const loginButton = document.querySelector('.button');
@@ -40,6 +34,7 @@ function setAlreadyBlock(alreadyText) {
   input.style.display = 'none';
   alreadyBlock.textContent = `You've entered the following: ${alreadyText}`;
   alreadyBlock.style.display = 'block';
+  saveButton.style.display = 'none';
 }
 
 function handleJsonCheck(json) {
@@ -51,7 +46,7 @@ function handleJsonCheck(json) {
 
 function setRole(role) {
   if (role) {
-    roleBlock.textContent = `Member plus: ${role === 'oneField' ? 'No' : 'Yes'}`;
+    roleBlock.textContent = role === 'oneField' ? 'Regular member' : 'Club member';
   } else {
     infoBlock.className = 'info';
     infoBlock.textContent = "You don't have the required role";
@@ -86,6 +81,7 @@ window.onload = () => {
   const code = fragment.get('code');
 
   if (!config.oauthUrl || !config.serverUrl) {
+    setInfoBlock('INVALID CONFIG', 'err');
     return console.error('INVALID CONFIG');
   }
   if (!code && !accessToken) return;
